@@ -1,0 +1,5 @@
+dsu
+*.o
+*.out
+*.err
+.DS_Store
