@@ -1,0 +1,25 @@
+=== SSSP MODE (Single-Source Shortest Path) ===
+GPU 0: NVIDIA L40 (sm_89, 142 SMs, 44.4 GB) | Graph rmat: n=1048576, initial_edges=11744051, stream_edges=5033165, batches=10 x 100000, undirected (built in 5614.5 ms)
+Initial SSSP (source=792295): 595252 reachable vertices (GPU frontier: 2.311 ms, 8 iters) | Verify: PASS
+
+batch | new_edges | total_edges | vertices_updated | gpu_sssp_ms | cpu_incr_ms | cpu_dijk_ms |  speedup | check
+------+-----------+-------------+------------------+-------------+-------------+-------------+----------+------
+    0 |    100000 |    11844051 |             8368 |       0.375 |      3.0517 |    339.6952 |  906.07x |  PASS
+    1 |    100000 |    11944051 |             8393 |       0.427 |      3.2853 |    329.9095 |  772.78x |  PASS
+    2 |    100000 |    12044051 |            10133 |       0.535 |      3.9735 |    342.1810 |  640.08x |  PASS
+    3 |    100000 |    12144051 |             8004 |       0.476 |      3.1917 |    343.1314 |  720.53x |  PASS
+    4 |    100000 |    12244051 |             8567 |       0.427 |      3.4413 |    346.1931 |  810.92x |  PASS
+    5 |    100000 |    12344051 |             7953 |       0.425 |      3.2339 |    361.5573 |  851.12x |  PASS
+    6 |    100000 |    12444051 |             7744 |       0.431 |      3.1951 |    363.7914 |  843.42x |  PASS
+    7 |    100000 |    12544051 |             7252 |       0.404 |      3.0181 |    365.9401 |  904.79x |  PASS
+    8 |    100000 |    12644051 |             8508 |       0.486 |      3.5627 |    365.6751 |  753.04x |  PASS
+    9 |    100000 |    12744051 |             8913 |       0.527 |      3.6638 |    378.3869 |  717.64x |  PASS
+
+SSSP Summary (10 batches):
+  total vertices updated        : 83835
+  mean GPU incremental SSSP     : 0.451 ms/batch (e2e incl. H2D+CSR: 1.564 ms)
+  mean CPU incremental SSSP     : 3.3617 ms/batch
+  mean CPU Dijkstra recompute   : 353.6461 ms/batch (speedup vs Dijkstra: 783.62x)
+  tracked GPU memory (peak)     : 308.4 MB
+  saved report                  : results/large_sssp.txt
+  verification                  : ALL PASS

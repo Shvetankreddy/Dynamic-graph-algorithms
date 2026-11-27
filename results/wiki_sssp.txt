@@ -1,0 +1,25 @@
+=== SSSP MODE (Single-Source Shortest Path) ===
+GPU 0: NVIDIA L40 (sm_89, 142 SMs, 44.4 GB) | Graph data/wiki-Vote.txt: n=7115, initial_edges=72582, stream_edges=31107, batches=10 x 1000, directed (built in 29.5 ms)
+Initial SSSP (source=699): 2282 reachable vertices (GPU frontier: 0.486 ms, 10 iters) | Verify: PASS
+
+batch | new_edges | total_edges | vertices_updated | gpu_sssp_ms | cpu_incr_ms | cpu_dijk_ms |  speedup | check
+------+-----------+-------------+------------------+-------------+-------------+-------------+----------+------
+    0 |      1000 |       73582 |               49 |       0.143 |      0.0094 |      0.5201 |    3.64x |  PASS
+    1 |      1000 |       74582 |              149 |       0.191 |      0.0187 |      0.5202 |    2.72x |  PASS
+    2 |      1000 |       75582 |               99 |       0.241 |      0.0144 |      0.5263 |    2.18x |  PASS
+    3 |      1000 |       76582 |              388 |       0.338 |      0.0439 |      0.5344 |    1.58x |  PASS
+    4 |      1000 |       77582 |              182 |       0.290 |      0.0229 |      0.5402 |    1.86x |  PASS
+    5 |      1000 |       78582 |               37 |       0.118 |      0.0082 |      0.5639 |    4.79x |  PASS
+    6 |      1000 |       79582 |               26 |       0.087 |      0.0075 |      0.5413 |    6.22x |  PASS
+    7 |      1000 |       80582 |              116 |       0.243 |      0.0164 |      0.5504 |    2.27x |  PASS
+    8 |      1000 |       81582 |              150 |       0.227 |      0.0188 |      0.5690 |    2.50x |  PASS
+    9 |      1000 |       82582 |               46 |       0.141 |      0.0092 |      0.5522 |    3.91x |  PASS
+
+SSSP Summary (10 batches):
+  total vertices updated        : 1242
+  mean GPU incremental SSSP     : 0.202 ms/batch (e2e incl. H2D+CSR: 0.325 ms)
+  mean CPU incremental SSSP     : 0.0169 ms/batch
+  mean CPU Dijkstra recompute   : 0.5418 ms/batch (speedup vs Dijkstra: 2.68x)
+  tracked GPU memory (peak)     : 2.1 MB
+  saved report                  : results/wiki_sssp.txt
+  verification                  : ALL PASS

@@ -1,0 +1,24 @@
+=== DSU MODE (Weakly Connected Components) ===
+GPU 0: NVIDIA L40 (sm_89, 142 SMs, 44.4 GB) | Graph rmat: n=1048576, initial_edges=5033164, stream_edges=11744052, batches=10 x 500000, undirected (built in 5425.8 ms)
+Initial connectivity: 576266 components (GPU build: 13.771 ms) | Verify: PASS
+
+batch | new_edges | total_edges |   components (b->a / merged) | gpu_dsu_ms | cpu_dsu_ms |  speedup | check
+------+-----------+-------------+------------------------------+------------+------------+----------+------
+    0 |    500000 |     5533164 |     576266 -> 562364 (13902) |      0.068 |     3.5085 |   51.31x |  PASS
+    1 |    500000 |     6033164 |     562364 -> 549872 (12492) |      0.073 |     4.2525 |   58.49x |  PASS
+    2 |    500000 |     6533164 |     549872 -> 538368 (11504) |      0.065 |     4.2836 |   66.30x |  PASS
+    3 |    500000 |     7033164 |     538368 -> 527780 (10588) |      0.072 |     4.3029 |   60.03x |  PASS
+    4 |    500000 |     7533164 |      527780 -> 517897 (9883) |      0.065 |     4.3472 |   67.39x |  PASS
+    5 |    500000 |     8033164 |      517897 -> 508437 (9460) |      0.071 |     4.3676 |   61.10x |  PASS
+    6 |    500000 |     8533164 |      508437 -> 499552 (8885) |      0.063 |     4.3730 |   68.88x |  PASS
+    7 |    500000 |     9033164 |      499552 -> 491210 (8342) |      0.070 |     4.3600 |   62.62x |  PASS
+    8 |    500000 |     9533164 |      491210 -> 483424 (7786) |      0.062 |     4.3486 |   69.62x |  PASS
+    9 |    500000 |    10033164 |      483424 -> 476034 (7390) |      0.070 |     4.3456 |   62.49x |  PASS
+
+DSU Summary (10 batches):
+  components (initial -> final) : 576266 -> 476034 (100232 merged)
+  mean GPU DSU kernel           : 0.068 ms/batch (e2e incl. H2D+CSR: 5.501 ms)
+  mean CPU DSU update           : 4.2490 ms/batch (speedup: 62.62x)
+  tracked GPU memory (peak)     : 425.8 MB
+  saved report                  : results/large_dsu.txt
+  verification                  : ALL PASS
