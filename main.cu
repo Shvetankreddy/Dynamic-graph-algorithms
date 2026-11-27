@@ -1,18 +1,3 @@
-// main.cu : Driver for the Dynamic Graph (DSU + SSSP) experiments.
-//
-// Supports two invocation styles:
-//
-//   Positional (simple):
-//     ./dynamic_graph dsu  data/dsu_test.txt  [flags...]
-//     ./dynamic_graph sssp data/sssp_test.txt [flags...]
-//
-//   Flag-based (full):
-//     ./dynamic_graph --mode cc   --graph snap --file data/dsu_test.txt  [flags...]
-//     ./dynamic_graph --mode sssp --graph snap --file data/sssp_test.txt [flags...]
-//
-// Outputs clean mode-specific tables (DSU table and/or SSSP table) to stdout
-// and writes separate .txt report files under results/ when enabled.
-//
 #include <algorithm>
 #include <cstdarg>
 #include <fstream>
@@ -23,7 +8,6 @@
 
 #include "common.cuh"
 using namespace std;
-
 
 // Command-line options
 
@@ -51,10 +35,10 @@ struct Options {
     int         queries     = 1000;
     double      merge_frac  = 0.1;
     string mode        = "all";  // all | cc | sssp
-    string out;                  // optional .txt report path
+    string out;                 
     bool        out_explicit = false;
     bool        no_out      = false;
-    string csv;                  // optional .csv path (only written if set)
+    string csv;                 
     string tag         = "run";
     uint64_t    seed        = 42;
     int         device      = 0;
@@ -234,9 +218,6 @@ static bool verify_tree(const HostDynGraph& g, vid_t src,
     }
     return true;
 }
-
-
-// Formatting & Report Helpers (2 clean tables + separate .txt outputs)
 
 struct DsuRow {
     long long batch = 0;
@@ -426,7 +407,7 @@ int main(int argc, char** argv) {
                                       o.device, prop.name, prop.major, prop.minor,
                                       prop.multiProcessorCount, total0 / 1073741824.0);
 
-    // ---- graph and update stream ----
+    // - graph and update stream -
     HostTimer ht; ht.start();
     EdgeList full = make_graph(o);
     EdgeList initial;
@@ -449,7 +430,7 @@ int main(int argc, char** argv) {
                                         initial.edges.size(), stream.size(), nb, o.batch_size,
                                         o.directed ? "directed" : "undirected", ht.stop_ms());
 
-    // ---- GPU structures ----
+    // GPU structures 
     DeviceDynGraph dg;
     dg.init(hg.base(), o.directed, static_cast<size_t>(o.batch_size), o.merge_frac);
 
@@ -673,7 +654,7 @@ int main(int argc, char** argv) {
     }
     if (csv.is_open()) csv.close();
 
-    // ---- Output 2 separate clean tables (+ separate .txt files) ----
+    //  Output 2 separate clean tables (+ separate .txt files) 
     const double peak_mb = device_mem_stats().peak / 1048576.0;
     const double mean_e2e_dsu  = nb > 0 ? sum_e2e_dsu  / nb : 0.0;
     const double mean_e2e_sssp = nb > 0 ? sum_e2e_sssp / nb : 0.0;

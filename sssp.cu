@@ -3,13 +3,11 @@
 #include <algorithm>
 
 namespace cg = cooperative_groups;
-//GpuSSSP kernels and implementation
-
 namespace {
 
 constexpr unsigned long long DP_INF  = 0xFFFFFFFFFFFFFFFFull;
-constexpr int SMALL_DEG = 32;    // degree < 32   -> one thread per vertex
-constexpr int LARGE_DEG = 1024;  // degree >= 1024 -> one block per vertex (else warp)
+constexpr int SMALL_DEG = 32;    // degree < 32
+constexpr int LARGE_DEG = 1024;  // degree >= 1024 -> one block per vertex 
 constexpr int SHARED_Q  = 2048;  // shared-memory output queue entries per block
 
 __device__ __forceinline__ unsigned long long pack_dp(dist_t d, vid_t p) {
@@ -46,8 +44,6 @@ __device__ __forceinline__ void enqueue_global(vid_t v, unsigned* flag, vid_t* q
     if (atomicExch(&flag[v], 1u) == 0u) push_aggregated(v, q, q_size);
 }
 
-// ---------------------------------------------------------------------------
-// Init kernel
 __global__ void k_init_dp(unsigned long long* dp, vid_t n, vid_t src) {
     for (vid_t v = blockIdx.x * blockDim.x + threadIdx.x; v < n; v += gridDim.x * blockDim.x)
         dp[v] = (v == src) ? pack_dp(0, src) : DP_INF;
@@ -108,7 +104,7 @@ __global__ void k_relax_warp(GraphView g, unsigned long long* dp,
     }
 }
 
-// Block-per-vertex (high-degree hubs).
+// Block-per-vertex 
 __global__ void k_relax_block(GraphView g, unsigned long long* dp,
                                const vid_t* __restrict__ fq, int fsize,
                                unsigned* flag, vid_t* next, int* next_size) {
@@ -167,9 +163,7 @@ __global__ void k_seed_insertions(unsigned long long* dp, const vid_t* __restric
     }
 }
 
-}  // anonymous namespace (SSSP)
-
-// ---------------------------------------------------------------------------
+}  
 void GpuSSSP::init(vid_t n, int block_size, bool load_balance) {
     release();
     n_ = n; block_ = block_size; lb_ = load_balance;

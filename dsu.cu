@@ -28,7 +28,6 @@ int grid_for(long long work, int block) {
     return static_cast<int>(min<long long>(g, max_blocks));
 }
 
-
 //DeviceDynGraph kernels and implementation
 // Unpack an AoS batch into SoA arrays 
 __global__ void k_unpack_batch(const Edge* __restrict__ in, int k,
@@ -39,7 +38,6 @@ __global__ void k_unpack_batch(const Edge* __restrict__ in, int k,
         u[i] = e.u; v[i] = e.v; w[i] = e.w;
     }
 }
-
 // Append batch arcs to the end of the delta COO (both directions for undirected graphs).
 __global__ void k_append_arcs(const vid_t* __restrict__ eu, const vid_t* __restrict__ ev,
                                const weight_t* __restrict__ ew, int k, bool directed,

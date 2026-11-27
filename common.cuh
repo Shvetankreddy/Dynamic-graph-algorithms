@@ -8,28 +8,22 @@
 
 #include <cuda_runtime.h>
 
-
-// Section 1: Fundamental types and constants  (from common.h)
-
-
-// Vertex IDs and edge offsets are 32-bit (supports up to ~2.1 billion arcs).
 using vid_t    = int32_t;
 using eid_t    = int32_t;
 using weight_t = uint32_t;
 using dist_t   = uint32_t;
 
-// Distance "infinity": distances live in the upper 32 bits of a packed 64-bit word
-// (see SSSP packing), so INF must be the all-ones 32-bit value.
+
 static constexpr dist_t DIST_INF = 0xFFFFFFFFu;
 
-// One directed or undirected edge as it arrives in an update batch.
+// One directed or undirected edge.
 struct Edge {
     vid_t u;
     vid_t v;
     weight_t w;
 };
 
-// Wall-clock timer for host-side measurements (milliseconds).
+//timer for host-side 
 class HostTimer {
 public:
     void start() { t0_ = std::chrono::high_resolution_clock::now(); }
@@ -41,16 +35,12 @@ private:
     std::chrono::high_resolution_clock::time_point t0_;
 };
 
-// Fatal error helper: prints message to stderr and exits.
 inline void fail(const std::string& msg) {
     std::fprintf(stderr, "ERROR: %s\n", msg.c_str());
     std::exit(EXIT_FAILURE);
 }
 
-
-// Section 2: CUDA error checking, timers, and tracked allocator (from cuda_utils.cuh)
-
-
+// CUDA error checking, timers, and tracked allocator 
 #define CUDA_CHECK(call)                                                                  \
     do {                                                                                  \
         cudaError_t err__ = (call);                                                       \
@@ -63,7 +53,7 @@ inline void fail(const std::string& msg) {
 
 #define CUDA_CHECK_LAST() CUDA_CHECK(cudaGetLastError())
 
-// GPU event timer (measures GPU time on the default stream).
+// GPU event timer 
 class GpuTimer {
 public:
     GpuTimer()  { CUDA_CHECK(cudaEventCreate(&start_)); CUDA_CHECK(cudaEventCreate(&stop_)); }
@@ -79,13 +69,9 @@ public:
 private:
     cudaEvent_t start_, stop_;
 };
-
-// Tracked allocations: lets us report our own device memory footprint
-// (cudaMemGetInfo also includes CUDA context and Thrust temporaries).
 struct DeviceMemStats { size_t current = 0, peak = 0; };
 DeviceMemStats& device_mem_stats();   // defined in dsu.cu
 
-// Tracked device malloc / free wrappers.
 template <typename T>
 T* dmalloc(size_t count) {
     T* p = nullptr;
@@ -105,19 +91,15 @@ void dfree(T*& p, size_t count) {
     p = nullptr;
 }
 
-// Grid size for grid-stride loops: fills the GPU, capped by work.
 // Defined in dsu.cu.
 int grid_for(long long work, int block);
 
-
 // COO edge list. For an undirected graph each edge is stored once;
-// the CSR builder emits both directions.
 struct EdgeList {
     vid_t n = 0;
     bool directed = false;
     std::vector<Edge> edges;
 };
-
 // Compressed Sparse Row (out-arcs).
 // row_ptr has n+1 entries; arcs of u are col[row_ptr[u] .. row_ptr[u+1]).
 struct CSR {
@@ -131,7 +113,6 @@ struct CSR {
 // Build a CSR from an edge list. Undirected edges contribute two arcs each.
 CSR build_csr(vid_t n, const std::vector<Edge>& edges, bool directed);
 
-// Host mirror of the dynamic graph (immutable base CSR + per-vertex delta vectors).
 struct HostArc { vid_t v; weight_t w; };
 
 class HostDynGraph {
@@ -169,32 +150,19 @@ private:
 
 // Return the vertex with the largest out-degree (used as default SSSP source).
 vid_t max_degree_vertex(const CSR& g);
-
-
 // Graph generators (all weights uniform in [1, max_w])
-
 EdgeList gen_uniform(vid_t n, size_t m, weight_t max_w, uint64_t seed, bool directed);
 EdgeList gen_rmat(int scale, int edge_factor, weight_t max_w, uint64_t seed, bool directed,
                   double a = 0.57, double b = 0.19, double c = 0.19);
 EdgeList gen_grid(int rows, int cols, weight_t max_w, uint64_t seed, bool directed);
 
-
-// File loaders
-
-// SNAP edge list: lines "u v" or "u v w", '#'/'%' comments, arbitrary ids (remapped).
-// Missing weights are assigned deterministically using seed-based RNG in [1, max_w].
 EdgeList load_snap(const std::string& path, weight_t max_w, uint64_t seed, bool directed);
-// DIMACS .gr: "p sp n m" header + "a u v w" arc lines, 1-based IDs.
+
 EdgeList load_dimacs(const std::string& path, bool directed);
 
 // Split an edge list into the initial graph and an insertion stream.
 // Edges are shuffled; the first init_frac fraction is the initial graph.
-void split_initial_and_stream(const EdgeList& full, double init_frac, uint64_t seed,
-                               EdgeList& initial, std::vector<Edge>& stream);
-
-
-// Section 4: GPU dynamic graph 
-
+void split_initial_and_stream(const EdgeList& full, double init_frac, uint64_t seed,EdgeList& initial, std::vector<Edge>& stream);
 
 // Lightweight view passed by value to CUDA kernels.
 struct GraphView {
@@ -213,8 +181,7 @@ struct GraphView {
     __device__ __forceinline__ eid_t degree(vid_t u)      const { return base_deg(u) + delta_deg(u); }
 
     // i-th out-arc of u across base and delta (0 <= i < degree(u)).
-    __device__ __forceinline__ void arc(vid_t u, eid_t i, eid_t bdeg,
-                                        vid_t& v, weight_t& wt) const {
+    __device__ __forceinline__ void arc(vid_t u, eid_t i, eid_t bdeg,vid_t& v, weight_t& wt) const {
         if (i < bdeg) {
             eid_t e = row[u] + i;  v = col[e]; wt = w[e];
         } else {
@@ -277,12 +244,12 @@ private:
     vid_t*  d_es_        = nullptr;
     vid_t*  d_ed_        = nullptr;
     weight_t* d_ew_      = nullptr;
-    Edge*   h_stage_     = nullptr;   // pinned host buffer
+    Edge*   h_stage_     = nullptr;   
     Edge*   d_stage_aos_ = nullptr;
 };
 
 
-// Section 5: GPU Disjoint Set Union  
+//GPU Disjoint Set Union  
 class GpuDSU {
 public:
     GpuDSU() = default;
@@ -294,7 +261,7 @@ public:
     void release();
     void reset();   // set every vertex as its own root
 
-    // Union every edge of a device edge array; returns kernel time (ms) incl. compress pass.
+    // Union every edge of a device edge array; returns kernel time (ms) incl.
     float union_edges(const vid_t* d_u, const vid_t* d_v, int k);
     // Static recompute: reset and union every arc of the current graph.
     float recompute_from_graph(const GraphView& g, bool directed);
@@ -302,8 +269,8 @@ public:
     float query(const std::vector<vid_t>& qa, const std::vector<vid_t>& qb,
                 std::vector<uint8_t>& out);
 
-    vid_t components() const;                   // read device counter
-    void  roots(std::vector<vid_t>& out) const; // root of every vertex (after compress)
+    vid_t components() const;                   
+    void  roots(std::vector<vid_t>& out) const; 
 
 private:
     void compress();
@@ -318,7 +285,6 @@ private:
 };
 
 // GPU SSSP  
-
 struct SSSPStats {
     float seed_ms      = 0.f;
     float propagate_ms = 0.f;
@@ -364,8 +330,6 @@ private:
     vid_t*              d_ql_       = nullptr;
     int*                d_counters_ = nullptr;
 };
-
-
 
 // Sequential DSU with path compression and union by rank.
 class CpuDSU {
