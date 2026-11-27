@@ -10,8 +10,9 @@
 #include <unordered_map>
 #include <utility>
 
+using namepsace std;
 // CSR construction  
-CSR build_csr(vid_t n, const std::vector<Edge>& edges, bool directed) {
+CSR build_csr(vid_t n, const vector<Edge>& edges, bool directed) {
     CSR g;
     g.n = n;
     const size_t arcs = directed ? edges.size() : 2 * edges.size();
@@ -27,7 +28,7 @@ CSR build_csr(vid_t n, const std::vector<Edge>& edges, bool directed) {
     }
     for (vid_t i = 0; i < n; ++i) g.row_ptr[i + 1] += g.row_ptr[i];
 
-    std::vector<eid_t> pos(g.row_ptr.begin(), g.row_ptr.end() - 1);
+    vector<eid_t> pos(g.row_ptr.begin(), g.row_ptr.end() - 1);
     for (const Edge& e : edges) {
         eid_t p = pos[e.u]++;
         g.col[p] = e.v;
@@ -60,7 +61,7 @@ HostDynGraph::HostDynGraph(const EdgeList& initial)
       base_(build_csr(initial.n, initial.edges, initial.directed)),
       delta_(static_cast<size_t>(initial.n)) {}
 
-void HostDynGraph::insert_edges(const std::vector<Edge>& batch) {
+void HostDynGraph::insert_edges(const vector<Edge>& batch) {
     for (const Edge& e : batch) {
         delta_[e.u].push_back({e.v, e.w});
         ++m_delta_;
@@ -86,9 +87,9 @@ EdgeList gen_uniform(vid_t n, size_t m, weight_t max_w, uint64_t seed, bool dire
     EdgeList el;
     el.n = n; el.directed = directed;
     el.edges.reserve(m);
-    std::mt19937_64 rng(seed);
-    std::uniform_int_distribution<vid_t>    vd(0, n - 1);
-    std::uniform_int_distribution<weight_t> wd(1, max_w);
+    mt19937_64 rng(seed);
+    uniform_int_distribution<vid_t>    vd(0, n - 1);
+    uniform_int_distribution<weight_t> wd(1, max_w);
     while (el.edges.size() < m) {
         vid_t u = vd(rng), v = vd(rng);
         if (u == v) continue;
@@ -106,13 +107,13 @@ EdgeList gen_rmat(int scale, int edge_factor, weight_t max_w, uint64_t seed, boo
     const size_t m = static_cast<size_t>(edge_factor) * static_cast<size_t>(el.n);
     el.edges.reserve(m);
 
-    std::mt19937_64 rng(seed);
-    std::uniform_real_distribution<double>  ud(0.0, 1.0);
-    std::uniform_int_distribution<weight_t> wd(1, max_w);
+    mt19937_64 rng(seed);
+    uniform_real_distribution<double>  ud(0.0, 1.0);
+    uniform_int_distribution<weight_t> wd(1, max_w);
 
-    std::vector<vid_t> perm(el.n);
-    std::iota(perm.begin(), perm.end(), 0);
-    std::shuffle(perm.begin(), perm.end(), rng);
+    vector<vid_t> perm(el.n);
+    iota(perm.begin(), perm.end(), 0);
+    shuffle(perm.begin(), perm.end(), rng);
 
     const double ab = a + b, abc = a + b + c;
     while (el.edges.size() < m) {
@@ -139,8 +140,8 @@ EdgeList gen_grid(int rows, int cols, weight_t max_w, uint64_t seed, bool direct
     if (n > static_cast<size_t>(INT32_MAX)) fail("grid too large");
     EdgeList el;
     el.n = static_cast<vid_t>(n); el.directed = directed;
-    std::mt19937_64 rng(seed);
-    std::uniform_int_distribution<weight_t> wd(1, max_w);
+    mt19937_64 rng(seed);
+    uniform_int_distribution<weight_t> wd(1, max_w);
     auto id = [cols](int r, int c) { return static_cast<vid_t>(r * cols + c); };
     for (int r = 0; r < rows; ++r) {
         for (int c = 0; c < cols; ++c) {
@@ -156,11 +157,11 @@ EdgeList gen_grid(int rows, int cols, weight_t max_w, uint64_t seed, bool direct
 }
 
 void split_initial_and_stream(const EdgeList& full, double init_frac, uint64_t seed,
-                               EdgeList& initial, std::vector<Edge>& stream) {
+                               EdgeList& initial, vector<Edge>& stream) {
     if (init_frac < 0.0 || init_frac > 1.0) fail("init-frac must be in [0, 1]");
-    std::vector<Edge> shuffled = full.edges;
-    std::mt19937_64 rng(seed ^ 0x9E3779B97F4A7C15ull);
-    std::shuffle(shuffled.begin(), shuffled.end(), rng);
+    vector<Edge> shuffled = full.edges;
+    mt19937_64 rng(seed ^ 0x9E3779B97F4A7C15ull);
+    shuffle(shuffled.begin(), shuffled.end(), rng);
     const size_t k = static_cast<size_t>(init_frac * static_cast<double>(shuffled.size()));
 
     initial.n = full.n; initial.directed = full.directed;
@@ -176,13 +177,13 @@ void split_initial_and_stream(const EdgeList& full, double init_frac, uint64_t s
 // Arbitrary vertex IDs are remapped to 0..n-1.
 // If a weight column is missing or <= 0, weights are drawn uniformly from [1, max_w]
 // using a seeded RNG, making the assignment deterministic and reproducible.
-EdgeList load_snap(const std::string& path, weight_t max_w, uint64_t seed, bool directed) {
-    std::ifstream in(path);
+EdgeList load_snap(const string& path, weight_t max_w, uint64_t seed, bool directed) {
+    ifstream in(path);
     if (!in) fail("cannot open " + path);
 
     EdgeList el;
     el.directed = directed;
-    std::unordered_map<long long, vid_t> remap;
+    unordered_map<long long, vid_t> remap;
     auto get_id = [&](long long raw) {
         auto it = remap.find(raw);
         if (it != remap.end()) return it->second;
@@ -191,12 +192,12 @@ EdgeList load_snap(const std::string& path, weight_t max_w, uint64_t seed, bool 
         return id;
     };
 
-    std::mt19937_64 rng(seed);
-    std::uniform_int_distribution<weight_t> wd(1, max_w);
-    std::string line;
-    while (std::getline(in, line)) {
+    mt19937_64 rng(seed);
+    uniform_int_distribution<weight_t> wd(1, max_w);
+    string line;
+    while (getline(in, line)) {
         if (line.empty() || line[0] == '#' || line[0] == '%') continue;
-        std::istringstream ss(line);
+        istringstream ss(line);
         long long a, b;
         if (!(ss >> a >> b)) continue;
         long long wraw;
@@ -211,23 +212,23 @@ EdgeList load_snap(const std::string& path, weight_t max_w, uint64_t seed, bool 
 }
 
 // DIMACS .gr shortest-path format: "p sp n m" header + "a u v w" arc lines (1-based IDs).
-EdgeList load_dimacs(const std::string& path, bool directed) {
-    std::ifstream in(path);
+EdgeList load_dimacs(const string& path, bool directed) {
+    ifstream in(path);
     if (!in) fail("cannot open " + path);
 
     EdgeList el;
     el.directed = directed;
-    std::string line;
-    while (std::getline(in, line)) {
+    string line;
+    while (getline(in, line)) {
         if (line.empty()) continue;
         if (line[0] == 'p') {
-            std::istringstream ss(line);
-            std::string p, sp; long long n, m;
+            istringstream ss(line);
+            string p, sp; long long n, m;
             ss >> p >> sp >> n >> m;
             el.n = static_cast<vid_t>(n);
             el.edges.reserve(static_cast<size_t>(m));
         } else if (line[0] == 'a') {
-            std::istringstream ss(line);
+            istringstream ss(line);
             char a; long long u, v, w;
             ss >> a >> u >> v >> w;
             if (u == v) continue;
@@ -264,7 +265,7 @@ vid_t CpuDSU::find(vid_t x) {
 bool CpuDSU::unite(vid_t a, vid_t b) {
     a = find(a); b = find(b);
     if (a == b) return false;
-    if (rank_[a] < rank_[b]) std::swap(a, b);
+    if (rank_[a] < rank_[b]) swap(a, b);
     parent_[b] = a;
     if (rank_[a] == rank_[b]) ++rank_[a];
     --components_;
@@ -284,11 +285,11 @@ vid_t cpu_cc_recompute(const HostDynGraph& g) {
 // CPU Dijkstra  (from cpu_ref.cpp)
 
 
-using HeapItem = std::pair<dist_t, vid_t>;
-using MinHeap  = std::priority_queue<HeapItem, std::vector<HeapItem>, std::greater<HeapItem>>;
+using HeapItem = pair<dist_t, vid_t>;
+using MinHeap  = priority_queue<HeapItem, vector<HeapItem>, greater<HeapItem>>;
 
 static void dijkstra_propagate(const HostDynGraph& g, MinHeap& heap,
-                                std::vector<dist_t>& dist, size_t* settled_changes) {
+                                vector<dist_t>& dist, size_t* settled_changes) {
     while (!heap.empty()) {
         auto [d, u] = heap.top(); heap.pop();
         if (d != dist[u]) continue;   // stale entry
@@ -300,7 +301,7 @@ static void dijkstra_propagate(const HostDynGraph& g, MinHeap& heap,
     }
 }
 
-void cpu_dijkstra(const HostDynGraph& g, vid_t src, std::vector<dist_t>& dist) {
+void cpu_dijkstra(const HostDynGraph& g, vid_t src, vector<dist_t>& dist) {
     dist.assign(g.n(), DIST_INF);
     dist[src] = 0;
     MinHeap heap;
@@ -308,8 +309,8 @@ void cpu_dijkstra(const HostDynGraph& g, vid_t src, std::vector<dist_t>& dist) {
     dijkstra_propagate(g, heap, dist, nullptr);
 }
 
-size_t cpu_sssp_incremental(const HostDynGraph& g, const std::vector<Edge>& batch,
-                             std::vector<dist_t>& dist) {
+size_t cpu_sssp_incremental(const HostDynGraph& g, const vector<Edge>& batch,
+                             vector<dist_t>& dist) {
     MinHeap heap;
     auto seed = [&](vid_t a, vid_t b, weight_t w) {
         if (dist[a] == DIST_INF) return;

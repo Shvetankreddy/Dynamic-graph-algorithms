@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-
+using namespace std;
 #include <cuda_runtime.h>
 
 using vid_t    = int32_t;
@@ -26,18 +26,18 @@ struct Edge {
 //timer for host-side 
 class HostTimer {
 public:
-    void start() { t0_ = std::chrono::high_resolution_clock::now(); }
+    void start() { t0_ = chrono::high_resolution_clock::now(); }
     double stop_ms() const {
-        auto t1 = std::chrono::high_resolution_clock::now();
-        return std::chrono::duration<double, std::milli>(t1 - t0_).count();
+        auto t1 = chrono::high_resolution_clock::now();
+        return chrono::duration<double, milli>(t1 - t0_).count();
     }
 private:
-    std::chrono::high_resolution_clock::time_point t0_;
+    chrono::high_resolution_clock::time_point t0_;
 };
 
-inline void fail(const std::string& msg) {
-    std::fprintf(stderr, "ERROR: %s\n", msg.c_str());
-    std::exit(EXIT_FAILURE);
+inline void fail(const string& msg) {
+    fprintf(stderr, "ERROR: %s\n", msg.c_str());
+    exit(EXIT_FAILURE);
 }
 
 // CUDA error checking, timers, and tracked allocator 
@@ -45,9 +45,9 @@ inline void fail(const std::string& msg) {
     do {                                                                                  \
         cudaError_t err__ = (call);                                                       \
         if (err__ != cudaSuccess) {                                                       \
-            std::fprintf(stderr, "CUDA error %s at %s:%d: %s\n", #call, __FILE__,        \
+            fprintf(stderr, "CUDA error %s at %s:%d: %s\n", #call, __FILE__,        \
                          __LINE__, cudaGetErrorString(err__));                            \
-            std::exit(EXIT_FAILURE);                                                      \
+            exit(EXIT_FAILURE);                                                      \
         }                                                                                 \
     } while (0)
 
@@ -98,20 +98,20 @@ int grid_for(long long work, int block);
 struct EdgeList {
     vid_t n = 0;
     bool directed = false;
-    std::vector<Edge> edges;
+    vector<Edge> edges;
 };
 // Compressed Sparse Row (out-arcs).
 // row_ptr has n+1 entries; arcs of u are col[row_ptr[u] .. row_ptr[u+1]).
 struct CSR {
     vid_t n = 0;
     eid_t m = 0;
-    std::vector<eid_t> row_ptr;
-    std::vector<vid_t> col;
-    std::vector<weight_t> w;
+    vector<eid_t> row_ptr;
+    vector<vid_t> col;
+    vector<weight_t> w;
 };
 
 // Build a CSR from an edge list. Undirected edges contribute two arcs each.
-CSR build_csr(vid_t n, const std::vector<Edge>& edges, bool directed);
+CSR build_csr(vid_t n, const vector<Edge>& edges, bool directed);
 
 struct HostArc { vid_t v; weight_t w; };
 
@@ -120,7 +120,7 @@ public:
     HostDynGraph() = default;
     HostDynGraph(const EdgeList& initial);
 
-    void insert_edges(const std::vector<Edge>& batch);
+    void insert_edges(const vector<Edge>& batch);
 
     vid_t  n()         const { return base_.n; }
     bool   directed()  const { return directed_; }
@@ -144,7 +144,7 @@ public:
 private:
     bool directed_ = false;
     CSR base_;
-    std::vector<std::vector<HostArc>> delta_;
+    vector<vector<HostArc>> delta_;
     size_t m_delta_ = 0;
 };
 
@@ -156,13 +156,13 @@ EdgeList gen_rmat(int scale, int edge_factor, weight_t max_w, uint64_t seed, boo
                   double a = 0.57, double b = 0.19, double c = 0.19);
 EdgeList gen_grid(int rows, int cols, weight_t max_w, uint64_t seed, bool directed);
 
-EdgeList load_snap(const std::string& path, weight_t max_w, uint64_t seed, bool directed);
+EdgeList load_snap(const string& path, weight_t max_w, uint64_t seed, bool directed);
 
-EdgeList load_dimacs(const std::string& path, bool directed);
+EdgeList load_dimacs(const string& path, bool directed);
 
 // Split an edge list into the initial graph and an insertion stream.
 // Edges are shuffled; the first init_frac fraction is the initial graph.
-void split_initial_and_stream(const EdgeList& full, double init_frac, uint64_t seed,EdgeList& initial, std::vector<Edge>& stream);
+void split_initial_and_stream(const EdgeList& full, double init_frac, uint64_t seed,EdgeList& initial, vector<Edge>& stream);
 
 // Lightweight view passed by value to CUDA kernels.
 struct GraphView {
@@ -200,7 +200,7 @@ public:
     void init(const CSR& base, bool directed, size_t max_batch_edges, double merge_frac);
     void release();
 
-    float upload_batch(const std::vector<Edge>& batch);
+    float upload_batch(const vector<Edge>& batch);
     float apply_batch(bool* merged);
 
     GraphView view() const {
@@ -266,11 +266,11 @@ public:
     // Static recompute: reset and union every arc of the current graph.
     float recompute_from_graph(const GraphView& g, bool directed);
     // Answer "are a and b connected?" for a batch of pairs; returns kernel time (ms).
-    float query(const std::vector<vid_t>& qa, const std::vector<vid_t>& qb,
-                std::vector<uint8_t>& out);
+    float query(const vector<vid_t>& qa, const vector<vid_t>& qb,
+                vector<uint8_t>& out);
 
     vid_t components() const;                   
-    void  roots(std::vector<vid_t>& out) const; 
+    void  roots(vector<vid_t>& out) const; 
 
 private:
     void compress();
@@ -310,7 +310,7 @@ public:
     SSSPStats update_insertions(const GraphView& g, const vid_t* d_u, const vid_t* d_v,
                                 const weight_t* d_w, int k, bool directed);
 
-    void distances(std::vector<dist_t>& dist, std::vector<vid_t>* pred = nullptr) const;
+    void distances(vector<dist_t>& dist, vector<vid_t>* pred = nullptr) const;
     void set_load_balance(bool lb) { lb_ = lb; }
 
 private:
@@ -340,8 +340,8 @@ public:
     bool   unite(vid_t a, vid_t b);   // true if a merge happened
     vid_t  components() const { return components_; }
 private:
-    std::vector<vid_t>   parent_;
-    std::vector<uint8_t> rank_;
+    vector<vid_t>   parent_;
+    vector<uint8_t> rank_;
     vid_t components_ = 0;
 };
 
@@ -349,9 +349,9 @@ private:
 vid_t cpu_cc_recompute(const HostDynGraph& g);
 
 // Dijkstra (binary heap) from src over the current graph. dist[v]=DIST_INF if unreachable.
-void cpu_dijkstra(const HostDynGraph& g, vid_t src, std::vector<dist_t>& dist);
+void cpu_dijkstra(const HostDynGraph& g, vid_t src, vector<dist_t>& dist);
 
 // Incremental SSSP on the CPU: dist holds correct distances BEFORE the batch;
 // g already contains the batch. Returns the number of vertices whose distance decreased.
-size_t cpu_sssp_incremental(const HostDynGraph& g, const std::vector<Edge>& batch,
-                             std::vector<dist_t>& dist);
+size_t cpu_sssp_incremental(const HostDynGraph& g, const vector<Edge>& batch,
+                             vector<dist_t>& dist);
