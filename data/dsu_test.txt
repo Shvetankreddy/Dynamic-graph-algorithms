@@ -1,0 +1,25 @@
+# DSU correctness test — 10 vertices (0-9), 13 edges (including repeated edge 0-1)
+# Expected final state: 2 components: {0,1,2,3,4} and {5,6,7,8,9}
+# Run: ./dynamic_graph dsu data/dsu_test.txt --init-frac 0.5 --batch-size 2 --num-batches -1
+#
+# Graph design:
+#   Edges connecting {0..4}: 0-1, 1-2, 2-3, 3-4, 0-2, 1-3, plus repeated 0-1
+#   Edges connecting {5..9}: 5-6, 6-7, 7-8, 8-9, 5-9, 6-8
+#
+# With --init-frac 0.5, the first half of the shuffled edges form the initial graph
+# (multiple disconnected components) and the remaining edges are streamed in batches,
+# testing component merging, already-connected pairs, and repeated edges.
+# After all batches are processed, exactly 2 components remain: {0,1,2,3,4} and {5,6,7,8,9}.
+0 1
+1 2
+2 3
+3 4
+5 6
+6 7
+7 8
+8 9
+0 2
+1 3
+5 9
+6 8
+0 1

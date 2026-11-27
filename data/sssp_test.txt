@@ -1,0 +1,26 @@
+# SSSP correctness test — 7 vertices (0-6), undirected, 7 edges
+# Source vertex 0 (use --source 0)
+#
+# Graph topology:
+#   0 --2-- 1 --3-- 2 --1-- 4
+#   0 --10- 2
+#   1 --5-- 3 --2-- 4
+#   5 --1-- 6     (isolated component: 5, 6 unreachable from 0)
+#
+# Expected shortest distances from source 0:
+#   v0 = 0       (source)
+#   v1 = 2       (direct edge 0->1)
+#   v2 = 5       (via 1: 2+3=5, not direct 10)
+#   v3 = 7       (via 1: 2+5=7)
+#   v4 = 6       (via 1->2: 2+3+1=6, not via 3: 2+5+2=9)
+#   v5 = INF     (unreachable)
+#   v6 = INF     (unreachable)
+#
+# Run: ./dynamic_graph sssp data/sssp_test.txt --source 0 --init-frac 0.5 --batch-size 2 --num-batches -1
+0 1 2
+0 2 10
+1 2 3
+1 3 5
+2 4 1
+3 4 2
+5 6 1

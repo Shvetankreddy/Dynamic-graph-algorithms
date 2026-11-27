@@ -1,0 +1,171 @@
+[s112301027-unnikrishnan@master logs]$ cat job_17026.out
+==============================
+Job ID       : 17026
+Node         : node002
+Date         : Fri Nov 27 12:21:01 IST 2026
+==============================
+Loaded module: cuda/11.3
+
+=== GPU Information ===
+NVIDIA A30, 8.0, 24576 MiB, 530.30.02
+NVIDIA A30, 8.0, 24576 MiB, 530.30.02
+
+>>> Correctness Test 1: DSU (data/dsu_test.txt)
+=== DSU MODE (Weakly Connected Components) ===
+GPU 0: NVIDIA A30 (sm_80, 56 SMs, 23.5 GB) | Graph data/dsu_test.txt: n=10, initial_edges=6, stream_edges=7, batches=4 x 2, undirected (built in 0.4 ms)
+Initial connectivity: 4 components (GPU build: 0.031 ms) | Verify: PASS
+
+batch | new_edges | total_edges |   components (b->a / merged) | gpu_dsu_ms | cpu_dsu_ms |  speedup | check
+------+-----------+-------------+------------------------------+------------+------------+----------+------
+    0 |         2 |           8 |                   4 -> 2 (2) |      0.014 |     0.0001 |    0.01x |  PASS
+    1 |         2 |          10 |                   2 -> 2 (0) |      0.012 |     0.0001 |    0.01x |  PASS
+    2 |         2 |          12 |                   2 -> 2 (0) |      0.012 |     0.0001 |    0.01x |  PASS
+    3 |         1 |          13 |                   2 -> 2 (0) |      0.012 |     0.0001 |    0.00x |  PASS
+
+DSU Summary (4 batches):
+  components (initial -> final) : 4 -> 2 (2 merged)
+  mean GPU DSU kernel           : 0.013 ms/batch (e2e incl. H2D+CSR: 0.143 ms)
+  mean CPU DSU update           : 0.0001 ms/batch (speedup: 0.01x)
+  tracked GPU memory (peak)     : 0.0 MB
+  verification                  : ALL PASS
+
+>>> Correctness Test 2: SSSP (data/sssp_test.txt)
+=== SSSP MODE (Single-Source Shortest Path) ===
+GPU 0: NVIDIA A30 (sm_80, 56 SMs, 23.5 GB) | Graph data/sssp_test.txt: n=7, initial_edges=3, stream_edges=4, batches=2 x 2, undirected (built in 0.5 ms)
+Initial SSSP (source=0): 2 reachable vertices (GPU frontier: 0.108 ms, 2 iters) | Verify: PASS
+
+batch | new_edges | total_edges | vertices_updated | gpu_sssp_ms | cpu_incr_ms | cpu_dijk_ms |  speedup | check
+------+-----------+-------------+------------------+-------------+-------------+-------------+----------+------
+    0 |         2 |           5 |                3 |       0.177 |      0.0005 |      0.0003 |    0.00x |  PASS
+    1 |         2 |           7 |                4 |       0.172 |      0.0008 |      0.0006 |    0.00x |  PASS
+
+SSSP Summary (2 batches):
+  total vertices updated        : 7
+  mean GPU incremental SSSP     : 0.175 ms/batch (e2e incl. H2D+CSR: 0.313 ms)
+  mean CPU incremental SSSP     : 0.0006 ms/batch
+  mean CPU Dijkstra recompute   : 0.0004 ms/batch (speedup vs Dijkstra: 0.00x)
+  tracked GPU memory (peak)     : 0.0 MB
+  verification                  : ALL PASS
+
+>>> Wiki-Vote Benchmark 1: DSU -> results/wiki_dsu.txt
+=== DSU MODE (Weakly Connected Components) ===
+GPU 0: NVIDIA A30 (sm_80, 56 SMs, 23.5 GB) | Graph data/wiki-Vote.txt: n=7115, initial_edges=72582, stream_edges=31107, batches=20 x 1000, directed (built in 40.3 ms)
+Initial connectivity: 804 components (GPU build: 1.094 ms) | Verify: PASS
+
+batch | new_edges | total_edges |   components (b->a / merged) | gpu_dsu_ms | cpu_dsu_ms |  speedup | check
+------+-----------+-------------+------------------------------+------------+------------+----------+------
+    0 |      1000 |       73582 |              804 -> 787 (17) |      0.015 |     0.0041 |    0.26x |  PASS
+    1 |      1000 |       74582 |              787 -> 749 (38) |      0.016 |     0.0047 |    0.28x |  PASS
+    2 |      1000 |       75582 |              749 -> 709 (40) |      0.016 |     0.0042 |    0.25x |  PASS
+    3 |      1000 |       76582 |              709 -> 677 (32) |      0.016 |     0.0041 |    0.25x |  PASS
+    4 |      1000 |       77582 |              677 -> 651 (26) |      0.015 |     0.0043 |    0.28x |  PASS
+    5 |      1000 |       78582 |              651 -> 624 (27) |      0.015 |     0.0040 |    0.26x |  PASS
+    6 |      1000 |       79582 |              624 -> 600 (24) |      0.015 |     0.0038 |    0.25x |  PASS
+    7 |      1000 |       80582 |              600 -> 572 (28) |      0.016 |     0.0043 |    0.26x |  PASS
+    8 |      1000 |       81582 |              572 -> 545 (27) |      0.015 |     0.0039 |    0.26x |  PASS
+    9 |      1000 |       82582 |              545 -> 523 (22) |      0.016 |     0.0039 |    0.24x |  PASS
+   10 |      1000 |       83582 |              523 -> 501 (22) |      0.015 |     0.0046 |    0.30x |  PASS
+   11 |      1000 |       84582 |              501 -> 477 (24) |      0.016 |     0.0040 |    0.24x |  PASS
+   12 |      1000 |       85582 |              477 -> 453 (24) |      0.015 |     0.0042 |    0.28x |  PASS
+   13 |      1000 |       86582 |              453 -> 428 (25) |      0.017 |     0.0043 |    0.25x |  PASS
+   14 |      1000 |       87582 |              428 -> 403 (25) |      0.016 |     0.0043 |    0.26x |  PASS
+   15 |      1000 |       88582 |              403 -> 387 (16) |      0.016 |     0.0038 |    0.23x |  PASS
+   16 |      1000 |       89582 |              387 -> 368 (19) |      0.015 |     0.0043 |    0.28x |  PASS
+   17 |      1000 |       90582 |              368 -> 339 (29) |      0.016 |     0.0043 |    0.26x |  PASS
+   18 |      1000 |       91582 |              339 -> 308 (31) |      0.016 |     0.0042 |    0.26x |  PASS
+   19 |      1000 |       92582 |              308 -> 279 (29) |      0.017 |     0.0039 |    0.23x |  PASS
+
+DSU Summary (20 batches):
+  components (initial -> final) : 804 -> 279 (525 merged)
+  mean GPU DSU kernel           : 0.016 ms/batch (e2e incl. H2D+CSR: 0.217 ms)
+  mean CPU DSU update           : 0.0042 ms/batch (speedup: 0.26x)
+  tracked GPU memory (peak)     : 2.0 MB
+  saved report                  : results/wiki_dsu.txt
+  verification                  : ALL PASS
+
+>>> Wiki-Vote Benchmark 2: SSSP -> results/wiki_sssp.txt
+=== SSSP MODE (Single-Source Shortest Path) ===
+GPU 0: NVIDIA A30 (sm_80, 56 SMs, 23.5 GB) | Graph data/wiki-Vote.txt: n=7115, initial_edges=72582, stream_edges=31107, batches=10 x 1000, directed (built in 39.7 ms)
+Initial SSSP (source=699): 2282 reachable vertices (GPU frontier: 0.929 ms, 10 iters) | Verify: PASS
+
+batch | new_edges | total_edges | vertices_updated | gpu_sssp_ms | cpu_incr_ms | cpu_dijk_ms |  speedup | check
+------+-----------+-------------+------------------+-------------+-------------+-------------+----------+------
+    0 |      1000 |       73582 |               49 |       0.258 |      0.0106 |      0.5722 |    2.22x |  PASS
+    1 |      1000 |       74582 |              149 |       0.341 |      0.0214 |      0.6000 |    1.76x |  PASS
+    2 |      1000 |       75582 |               99 |       0.439 |      0.0168 |      0.5996 |    1.37x |  PASS
+    3 |      1000 |       76582 |              388 |       0.638 |      0.0516 |      0.5926 |    0.93x |  PASS
+    4 |      1000 |       77582 |              182 |       0.534 |      0.0256 |      0.5978 |    1.12x |  PASS
+    5 |      1000 |       78582 |               37 |       0.231 |      0.0091 |      0.6129 |    2.65x |  PASS
+    6 |      1000 |       79582 |               26 |       0.169 |      0.0082 |      0.6076 |    3.59x |  PASS
+    7 |      1000 |       80582 |              116 |       0.442 |      0.0195 |      0.6143 |    1.39x |  PASS
+    8 |      1000 |       81582 |              150 |       0.447 |      0.0215 |      0.6099 |    1.36x |  PASS
+    9 |      1000 |       82582 |               46 |       0.231 |      0.0104 |      0.6088 |    2.64x |  PASS
+
+SSSP Summary (10 batches):
+  total vertices updated        : 1242
+  mean GPU incremental SSSP     : 0.373 ms/batch (e2e incl. H2D+CSR: 0.578 ms)
+  mean CPU incremental SSSP     : 0.0195 ms/batch
+  mean CPU Dijkstra recompute   : 0.6016 ms/batch (speedup vs Dijkstra: 1.61x)
+  tracked GPU memory (peak)     : 2.1 MB
+  saved report                  : results/wiki_sssp.txt
+  verification                  : ALL PASS
+
+>>> Large Benchmark 1: DSU (R-MAT scale=20, 16.7M edges, 500k/batch) -> results/large_dsu.txt
+=== DSU MODE (Weakly Connected Components) ===
+GPU 0: NVIDIA A30 (sm_80, 56 SMs, 23.5 GB) | Graph rmat: n=1048576, initial_edges=5033164, stream_edges=11744052, batches=10 x 500000, undirected (built in 6603.5 ms)
+Initial connectivity: 576266 components (GPU build: 30.356 ms) | Verify: PASS
+
+batch | new_edges | total_edges |   components (b->a / merged) | gpu_dsu_ms | cpu_dsu_ms |  speedup | check
+------+-----------+-------------+------------------------------+------------+------------+----------+------
+    0 |    500000 |     5533164 |     576266 -> 562364 (13902) |      0.157 |     4.3948 |   28.05x |  PASS
+    1 |    500000 |     6033164 |     562364 -> 549872 (12492) |      0.147 |     4.3913 |   29.78x |  PASS
+    2 |    500000 |     6533164 |     549872 -> 538368 (11504) |      0.148 |     4.3009 |   28.97x |  PASS
+    3 |    500000 |     7033164 |     538368 -> 527780 (10588) |      0.143 |     4.3010 |   30.00x |  PASS
+    4 |    500000 |     7533164 |      527780 -> 517897 (9883) |      0.154 |     4.2441 |   27.63x |  PASS
+    5 |    500000 |     8033164 |      517897 -> 508437 (9460) |      0.138 |     4.2557 |   30.79x |  PASS
+    6 |    500000 |     8533164 |      508437 -> 499552 (8885) |      0.161 |     4.2078 |   26.17x |  PASS
+    7 |    500000 |     9033164 |      499552 -> 491210 (8342) |      0.137 |     4.1523 |   30.26x |  PASS
+    8 |    500000 |     9533164 |      491210 -> 483424 (7786) |      0.136 |     4.1856 |   30.73x |  PASS
+    9 |    500000 |    10033164 |      483424 -> 476034 (7390) |      0.138 |     4.3227 |   31.27x |  PASS
+
+DSU Summary (10 batches):
+  components (initial -> final) : 576266 -> 476034 (100232 merged)
+  mean GPU DSU kernel           : 0.146 ms/batch (e2e incl. H2D+CSR: 4.367 ms)
+  mean CPU DSU update           : 4.2756 ms/batch (speedup: 29.28x)
+  tracked GPU memory (peak)     : 425.8 MB
+  saved report                  : results/large_dsu.txt
+  verification                  : ALL PASS
+
+>>> Large Benchmark 2: SSSP (R-MAT scale=20, 16.7M edges, 100k/batch) -> results/large_sssp.txt
+=== SSSP MODE (Single-Source Shortest Path) ===
+GPU 0: NVIDIA A30 (sm_80, 56 SMs, 23.5 GB) | Graph rmat: n=1048576, initial_edges=11744051, stream_edges=5033165, batches=10 x 100000, undirected (built in 6862.1 ms)
+Initial SSSP (source=792295): 595252 reachable vertices (GPU frontier: 7.390 ms, 8 iters) | Verify: PASS
+
+batch | new_edges | total_edges | vertices_updated | gpu_sssp_ms | cpu_incr_ms | cpu_dijk_ms |  speedup | check
+------+-----------+-------------+------------------+-------------+-------------+-------------+----------+------
+    0 |    100000 |    11844051 |             8368 |       0.854 |      3.5906 |    362.8992 |  424.87x |  PASS
+    1 |    100000 |    11944051 |             8393 |       0.830 |      3.6043 |    362.8311 |  437.34x |  PASS
+    2 |    100000 |    12044051 |            10133 |       1.063 |      4.2492 |    367.0025 |  345.31x |  PASS
+    3 |    100000 |    12144051 |             8004 |       0.910 |      3.4937 |    373.3502 |  410.50x |  PASS
+    4 |    100000 |    12244051 |             8567 |       0.875 |      3.7010 |    378.0054 |  432.13x |  PASS
+    5 |    100000 |    12344051 |             7953 |       0.834 |      3.4878 |    387.9966 |  465.07x |  PASS
+    6 |    100000 |    12444051 |             7744 |       0.851 |      3.3764 |    387.3835 |  455.33x |  PASS
+    7 |    100000 |    12544051 |             7252 |       0.756 |      3.2062 |    393.7975 |  521.03x |  PASS
+    8 |    100000 |    12644051 |             8508 |       0.984 |      3.6932 |    398.1821 |  404.81x |  PASS
+    9 |    100000 |    12744051 |             8913 |       1.042 |      3.8561 |    401.4236 |  385.24x |  PASS
+
+SSSP Summary (10 batches):
+  total vertices updated        : 83835
+  mean GPU incremental SSSP     : 0.900 ms/batch (e2e incl. H2D+CSR: 2.305 ms)
+  mean CPU incremental SSSP     : 3.6259 ms/batch
+  mean CPU Dijkstra recompute   : 381.2872 ms/batch (speedup vs Dijkstra: 423.78x)
+  tracked GPU memory (peak)     : 308.4 MB
+  saved report                  : results/large_sssp.txt
+  verification                  : ALL PASS
+
+==============================
+All tests complete.
+DSU correctness : exit 0
+SSSP correctness: exit 0
+Saved reports   : results/wiki_dsu.txt, results/wiki_sssp.txt, results/large_dsu.txt, results/large_sssp.txt
+Date: Fri Nov 27 12:22:01 IST 2026
